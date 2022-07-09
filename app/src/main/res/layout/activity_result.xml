@@ -7,15 +7,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Track your grounding while havin fun on a bicycle, now!" />
-    <Button android:id="@+id/start"
+        android:text="Here is your result!" />
+    <Button android:id="@+id/again"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="Start recording" />
-    <Button android:id="@+id/help"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="How to use" />
+        android:text="Start again" />
 </LinearLayout>
