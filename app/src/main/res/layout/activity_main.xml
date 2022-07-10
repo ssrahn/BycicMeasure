@@ -2,20 +2,40 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" >
-    <TextView android:id="@+id/text"
+    android:orientation="vertical"
+    android:layout_weight="3">
+
+    <ImageView
+        android:layout_weight="1.7"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="Track your grounding while havin fun on a bicycle, now!" />
-    <Button android:id="@+id/start"
+        android:layout_height="0dp"
+        android:src="@drawable/bicycle"
+        android:layout_marginBottom="0dp"/>
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_weight="0.2"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:layout_gravity="center_horizontal"
-        android:text="Start recording" />
-    <Button android:id="@+id/help"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:text="How to use" />
+        android:layout_marginTop="20dp"
+        android:text="Attention! Don't use your phone while driving. Keep yourself save!" />
+
+    <RelativeLayout
+        android:layout_weight="1.1"
+        android:layout_width="match_parent"
+        android:layout_height="0dp">
+        <Button
+            android:id="@+id/start"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start recording" />
+
+        <Button
+            android:id="@+id/help"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/start"
+            android:text="How to use" />
+    </RelativeLayout>
 </LinearLayout>
