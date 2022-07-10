@@ -26,15 +26,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        // Check google play status
         int googlePlayStatus = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
         if (googlePlayStatus == ConnectionResult.SUCCESS) {
-            // GooglePlayServices available
+            // GooglePlayServices available. Make start button available
             Button startButton = findViewById(R.id.start);
             startButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view)
                 {
+                    // Check location permissions befor starting
                     if ((ContextCompat.checkSelfPermission(view.getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) &&
                             (ContextCompat.checkSelfPermission(view.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)){
                         // Permission xy is not granted
@@ -46,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
                         );
                         // TODO better permission handling
                     } else {
-                        // Permission xy is granted
+                        // Permission for location is granted
                         Intent intent = new Intent(view.getContext(), MapActivity.class);
                         startActivity(intent);
                     }

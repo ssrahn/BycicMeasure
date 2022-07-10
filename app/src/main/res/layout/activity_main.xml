@@ -9,26 +9,49 @@
         android:layout_weight="1.7"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:src="@drawable/bicycle"
-        android:layout_marginBottom="0dp"/>
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/bicycle" />
 
-    <TextView
-        android:id="@+id/text"
-        android:layout_weight="0.2"
+    <LinearLayout
+        android:layout_weight="0.4"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="20dp"
-        android:text="Attention! Don't use your phone while driving. Keep yourself save!" />
+        android:orientation="vertical"
+        android:layout_gravity="center_horizontal">
+        <TextView
+            android:id="@+id/text1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:text="Attention!"
+            android:textStyle="bold"
+            android:textColor="#FF0000"/>
+        <TextView
+            android:id="@+id/text2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="Don't use your phone while driving."
+            android:textColor="#FF0000"/>
+        <TextView
+            android:id="@+id/text3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="Keep yourself save!"
+            android:textColor="#FF0000"/>
+    </LinearLayout>
 
     <RelativeLayout
-        android:layout_weight="1.1"
+        android:layout_weight="1"
         android:layout_width="match_parent"
         android:layout_height="0dp">
         <Button
             android:id="@+id/start"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
             android:text="Start recording" />
 
         <Button
