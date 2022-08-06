@@ -1,8 +1,7 @@
 package com.example.bycicmeasure;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -25,6 +24,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Set Night Mode Off
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+
         setContentView(R.layout.activity_main);
         // Check google play status
         int googlePlayStatus = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
@@ -57,6 +60,16 @@ public class MainActivity extends AppCompatActivity {
             // error handling
             // TODO show error text
         }
+
+        Button calibrateButton = findViewById(R.id.calibrate);
+        calibrateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view)
+            {
+                Intent intent = new Intent(view.getContext(), CalibrateActivity.class);
+                startActivity(intent);
+            }
+        });
 
         Button helpButton = findViewById(R.id.help);
         helpButton.setOnClickListener(new View.OnClickListener() {

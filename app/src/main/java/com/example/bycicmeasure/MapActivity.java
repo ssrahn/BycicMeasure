@@ -2,24 +2,45 @@ package com.example.bycicmeasure;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-public class MapActivity extends AppCompatActivity {
+import java.sql.Time;
+import java.util.ArrayList;
 
+public class MapActivity extends AppCompatActivity implements SensorEventListener {
+
+    private boolean paused = false;
     private MapView map = null;
+    private Polyline track;
+
+    private SensorManager sensorManager;
+    private Sensor sensor;
+    private ArrayList<Double> accelVertical;
+    private ArrayList<Double> accelTimes;
+
+    private long startTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,17 +51,38 @@ public class MapActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_map);
 
+        // Setup Sensor stuff
+        // TODO The linear acceleration sensor always has an offset, which you need to remove. The simplest way to do this is to build a calibration step into your application
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+
+        accelVertical = new ArrayList<Double>();
+        accelTimes = new ArrayList<Double>();
+
+        startTime = System.currentTimeMillis();
+
+        // Initialize map controlling
         map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
         IMapController mapController = map.getController();
         mapController.setZoom(18.5);
+
+        // Initialize line following
+        track = new Polyline(map);
+        track.getOutlinePaint().setColor(Color.parseColor("#0000FF"));
+        map.getOverlays().add(track);
 
         // This object handles location tracking and following on the map
         MyLocationNewOverlay myLocationoverlay = new MyLocationNewOverlay(map) {
             @Override
             public void onLocationChanged(Location location, IMyLocationProvider source) {
                 super.onLocationChanged(location, source);
-                // TODO ALGORITHMS
+
+                if (!paused) {
+                    track.addPoint(new GeoPoint(location.getLatitude(), location.getLongitude()));
+                    // TODO ALGORITHMS
+                }
             }
         };
         myLocationoverlay.enableFollowLocation();
@@ -60,7 +102,13 @@ public class MapActivity extends AppCompatActivity {
         pauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Do something
+                paused = !paused;
+                if (paused) {
+                    pauseButton.setText("Resume");
+                }
+                else {
+                    pauseButton.setText("Pause");
+                }
             }
         });
 
@@ -72,6 +120,21 @@ public class MapActivity extends AppCompatActivity {
                 mapController.setZoom(18.5);
             }
         });
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        Sensor sensor = event.sensor;
+
+        if (sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION && !paused) {
+            accelVertical.add((double) event.values[1]);
+            accelTimes.add((double) (System.currentTimeMillis() - startTime)/1000.0);
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
     }
 
     @Override

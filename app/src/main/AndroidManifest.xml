@@ -28,6 +28,13 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".CalibrateActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.CALIBRATE" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".MapActivity"
             android:exported="true">
             <intent-filter>
