@@ -2,6 +2,7 @@ package com.example.bycicmeasure;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -42,6 +43,9 @@ public class MapActivity extends AppCompatActivity implements SensorEventListene
 
     private long startTime;
 
+    private SharedPreferences preferences;
+    private double calibration;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,13 +56,15 @@ public class MapActivity extends AppCompatActivity implements SensorEventListene
         setContentView(R.layout.activity_map);
 
         // Setup Sensor stuff
-        // TODO The linear acceleration sensor always has an offset, which you need to remove. The simplest way to do this is to build a calibration step into your application
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+        // Load calibration variable
+        preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        calibration = (double) preferences.getFloat("calibration", 0);
 
-        accelVertical = new ArrayList<Double>();
-        accelTimes = new ArrayList<Double>();
+        accelVertical = new ArrayList<>();
+        accelTimes = new ArrayList<>();
 
         startTime = System.currentTimeMillis();
 
@@ -68,7 +74,7 @@ public class MapActivity extends AppCompatActivity implements SensorEventListene
         IMapController mapController = map.getController();
         mapController.setZoom(18.5);
 
-        // Initialize line following
+        // Initialize tracking polyline
         track = new Polyline(map);
         track.getOutlinePaint().setColor(Color.parseColor("#0000FF"));
         map.getOverlays().add(track);
@@ -80,6 +86,7 @@ public class MapActivity extends AppCompatActivity implements SensorEventListene
                 super.onLocationChanged(location, source);
 
                 if (!paused) {
+                    // On location change, add each location to the polyline to make it visible
                     track.addPoint(new GeoPoint(location.getLatitude(), location.getLongitude()));
                     // TODO ALGORITHMS
                 }
@@ -127,8 +134,11 @@ public class MapActivity extends AppCompatActivity implements SensorEventListene
         Sensor sensor = event.sensor;
 
         if (sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION && !paused) {
-            accelVertical.add((double) event.values[1]);
+            // substract the calibration variable to be more accurate
+            accelVertical.add((double) event.values[1] - calibration);
             accelTimes.add((double) (System.currentTimeMillis() - startTime)/1000.0);
+            // TODO ALGORITHMS
+            Log.d("TESTING", (double) event.values[1] - calibration + "");
         }
     }
 
