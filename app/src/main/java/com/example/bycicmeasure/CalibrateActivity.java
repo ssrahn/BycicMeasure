@@ -9,7 +9,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -62,7 +61,6 @@ public class CalibrateActivity extends AppCompatActivity implements SensorEventL
                     calibrating = true;
                     startTime = System.currentTimeMillis();
                 }
-
             }
         });
 

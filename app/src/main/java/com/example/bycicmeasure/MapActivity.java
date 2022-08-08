@@ -11,10 +11,8 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -27,23 +25,20 @@ import org.osmdroid.views.overlay.Polyline;
 import org.osmdroid.views.overlay.mylocation.IMyLocationProvider;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
-import java.sql.Time;
 import java.util.ArrayList;
 
 public class MapActivity extends AppCompatActivity implements SensorEventListener {
 
-    private boolean paused = false;
-    private MapView map = null;
+    private boolean paused;
+    private MapView map;
     private Polyline track;
 
-    private SensorManager sensorManager;
-    private Sensor sensor;
+    private ArrayList<Location> locations;
     private ArrayList<Double> accelVertical;
     private ArrayList<Double> accelTimes;
 
     private long startTime;
 
-    private SharedPreferences preferences;
     private double calibration;
 
     @Override
@@ -55,21 +50,24 @@ public class MapActivity extends AppCompatActivity implements SensorEventListene
 
         setContentView(R.layout.activity_map);
 
+        paused = true;
+
         // Setup Sensor stuff
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+        SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_NORMAL);
         // Load calibration variable
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        calibration = (double) preferences.getFloat("calibration", 0);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        calibration = preferences.getFloat("calibration", 0);
 
         accelVertical = new ArrayList<>();
         accelTimes = new ArrayList<>();
+        locations = new ArrayList<>();
 
         startTime = System.currentTimeMillis();
 
         // Initialize map controlling
-        map = (MapView) findViewById(R.id.map);
+        map = findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
         IMapController mapController = map.getController();
         mapController.setZoom(18.5);
@@ -87,8 +85,8 @@ public class MapActivity extends AppCompatActivity implements SensorEventListene
 
                 if (!paused) {
                     // On location change, add each location to the polyline to make it visible
+                    locations.add(location);
                     track.addPoint(new GeoPoint(location.getLatitude(), location.getLongitude()));
-                    // TODO ALGORITHMS
                 }
             }
         };
@@ -96,25 +94,31 @@ public class MapActivity extends AppCompatActivity implements SensorEventListene
         myLocationoverlay.enableMyLocation();
         map.getOverlays().add(myLocationoverlay);
 
-        Button stopButton = findViewById(R.id.stop);
-        stopButton.setOnClickListener(new View.OnClickListener() {
+        Button finishButton = findViewById(R.id.finish);
+        finishButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                paused = true;
                 Intent intent = new Intent(view.getContext(), ResultActivity.class);
+                intent.putExtra("AccelerationList", accelVertical);
+                intent.putExtra("AccelerationTimesList", accelTimes);
+                intent.putExtra("LocationList", locations);
                 startActivity(intent);
             }
         });
 
-        Button pauseButton = findViewById(R.id.pause);
-        pauseButton.setOnClickListener(new View.OnClickListener() {
+        Button startPauseButton = findViewById(R.id.start_pause);
+        startPauseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 paused = !paused;
                 if (paused) {
-                    pauseButton.setText("Resume");
+                    startPauseButton.setBackgroundColor(Color.parseColor("#4CBB17"));
+                    startPauseButton.setText("Start");
                 }
                 else {
-                    pauseButton.setText("Pause");
+                    startPauseButton.setBackgroundColor(Color.parseColor("#FF0000"));
+                    startPauseButton.setText("Pause");
                 }
             }
         });
@@ -134,11 +138,9 @@ public class MapActivity extends AppCompatActivity implements SensorEventListene
         Sensor sensor = event.sensor;
 
         if (sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION && !paused) {
-            // substract the calibration variable to be more accurate
+            // Substract the calibration variable to be more accurate
             accelVertical.add((double) event.values[1] - calibration);
             accelTimes.add((double) (System.currentTimeMillis() - startTime)/1000.0);
-            // TODO ALGORITHMS
-            Log.d("TESTING", (double) event.values[1] - calibration + "");
         }
     }
 
