@@ -56,17 +56,17 @@
             android:text="Start recording" />
 
         <Button
-            android:id="@+id/calibrate"
+            android:id="@+id/records"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/start"
-            android:text="Calibrate" />
+            android:text="Records" />
 
         <Button
             android:id="@+id/help"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/calibrate"
+            android:layout_below="@id/records"
             android:text="How to use" />
     </RelativeLayout>
 </LinearLayout>

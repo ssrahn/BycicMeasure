@@ -61,12 +61,12 @@ public class MainActivity extends AppCompatActivity {
             // TODO show error text
         }
 
-        Button calibrateButton = findViewById(R.id.calibrate);
+        Button calibrateButton = findViewById(R.id.records);
         calibrateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view)
             {
-                Intent intent = new Intent(view.getContext(), CalibrateActivity.class);
+                Intent intent = new Intent(view.getContext(), RecordsActivity.class);
                 startActivity(intent);
             }
         });
