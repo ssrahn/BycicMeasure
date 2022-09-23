@@ -33,25 +33,25 @@ public class RecordsActivity extends AppCompatActivity {
 
         File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS),"bycicmeasure" );
         File[] files = dir.listFiles();
-        ArrayList<String> records = new ArrayList<>();
-        for (int i = 0; i < files.length; i++)
-        {
-            Log.d("Files", "FileName:" + files[i].getName());
-            records.add(files[i].getName());
-        }
-        records.sort(Collections.reverseOrder());
-        ListView listview = (ListView)findViewById(R.id.listview_records);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, records);
-        listview.setAdapter(adapter);
-
-        listview.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-
-                Intent intent = new Intent(view.getContext(), ResultActivity.class);
-                intent.putExtra("filename", String.format("%s/%s", dir.toString(), records.get(i)));
-                startActivity(intent);
+        if (files != null) {
+            ArrayList<String> records = new ArrayList<>();
+            for (int i = 0; i < files.length; i++) {
+                Log.d("Files", "FileName:" + files[i].getName());
+                records.add(files[i].getName());
             }
-        });
+            if (!records.isEmpty()) {
+                records.sort(Collections.reverseOrder());
+                ListView listview = (ListView) findViewById(R.id.listview_records);
+                ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, records);
+                listview.setAdapter(adapter);
+
+                listview.setOnItemClickListener((adapterView, view, i, l) -> {
+
+                    Intent intent = new Intent(view.getContext(), ResultActivity.class);
+                    intent.putExtra("filename", String.format("%s/%s", dir, records.get(i)));
+                    startActivity(intent);
+                });
+            }
+        }
     }
 }

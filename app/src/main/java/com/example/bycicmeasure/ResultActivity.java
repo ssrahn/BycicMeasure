@@ -1,122 +1,137 @@
 package com.example.bycicmeasure;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.GridLabelRenderer;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.LineGraphSeries;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.osmdroid.api.IMapController;
+import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.CustomZoomButtonsDisplay;
+import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Polyline;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
-public class ResultActivity extends AppCompatActivity {
+public class ResultActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     private ArrayList<ArrayList<Location>> locations;
     private ArrayList<ArrayList<Double>> accelVertical;
     private ArrayList<ArrayList<Double>> accelTimes;
-    private int segments = 0;
+    // map object
+    private MapView map;
+    private Graph graph;
+
+    private ArrayList<Double> iri;
+    private ArrayList<String> color;
+    private ArrayList<Polyline> polylines;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_result);
 
-        String filename = (String)getIntent().getSerializableExtra("filename");
-        Log.i("myDebug", filename);
+        // OSM needs this to Download maps to the cache
+        Context ctx = getApplicationContext();
+        Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
 
-        JSONObject record = null;
-        try {
-            FileReader fileReader = new FileReader(filename);
-            BufferedReader bufferedReader = new BufferedReader(fileReader);
-            StringBuilder stringBuilder = new StringBuilder();
-            String line = bufferedReader.readLine();
-            while (line != null) {
-                stringBuilder.append(line).append("\n");
-                line = bufferedReader.readLine();
-            }
-            bufferedReader.close();// This responce will have Json Format String
-            String responce = stringBuilder.toString();
-            record  = new JSONObject(responce);
-        }catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        System.out.println(record);
+        String filename = (String)getIntent().getSerializableExtra("filename");
 
         accelVertical = new ArrayList<>();
         accelTimes = new ArrayList<>();
         locations = new ArrayList<>();
-        try{
-           for(int i=0; i < record.length(); ++i){
-              locations.add(new ArrayList<>());
-              accelTimes.add(new ArrayList<>());
-              accelVertical.add(new ArrayList<>());
-              JSONObject section = record.getJSONObject(String.format("section_%d", i));
 
-              JSONObject locations_json = section.getJSONObject("locations");
-              for(int loc_idx=0; loc_idx < locations_json.length(); ++loc_idx){
-                  JSONArray entry = locations_json.getJSONArray(String.format("%d", loc_idx));
-                  Location loc = new Location("");
-                  loc.setLatitude(entry.getDouble(0));
-                  loc.setLongitude(entry.getDouble(1));
-                  locations.get(i).add(loc);
-              }
+        Utils.readJSON(filename, locations, accelVertical, accelTimes);
 
-              JSONObject verticalAccel_json = section.getJSONObject("verticalAccel");
-              for(int accel_idx=0; accel_idx < verticalAccel_json.length(); ++accel_idx){
-                  JSONArray entry = verticalAccel_json.getJSONArray(String.format("%d", accel_idx));
-                  accelVertical.get(i).add(entry.getDouble(0));
-                  accelTimes.get(i).add(entry.getDouble(1));
-              }
-              ++segments;
-           }
-        } catch (JSONException e) {
-            e.printStackTrace();
+        graph = new Graph(findViewById(R.id.graph));
+        graph.setDatapoints(accelTimes.get(0), accelVertical.get(0));
+
+        //get the spinner from the xml.
+        Spinner spinner = findViewById(R.id.spinner);
+        //create a list of items for the spinner.
+        String[] items = new String[locations.size()-1];
+        for (int i=0; i<locations.size()-1; i++) {
+            items[i] = "Segment " + i;
         }
-        Log.i("myDebug",String.format("%d",record.length()));
-        for(int i=0; i <segments; ++i){
-            Log.i("myDebug", String.format("segment %d: %f", i, approxIRI(i)));
+
+        // Initialize map controlling
+        map = findViewById(R.id.map);
+        map.setTileSource(TileSourceFactory.MAPNIK);
+        map.getZoomController().getDisplay().setPositions(false, CustomZoomButtonsDisplay.HorizontalPosition.LEFT, CustomZoomButtonsDisplay.VerticalPosition.CENTER);
+        IMapController mapController = map.getController();
+        mapController.setZoom(18.5);
+
+        evaluate(accelVertical, accelTimes, locations);
+
+        //create an adapter to describe how the items are displayed, adapters are used in several places in android.
+        //There are multiple variations of this, but this is the basic variant.
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items);
+        //set the spinners adapter to the previously created one.
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(this);
+    }
+
+    private void evaluate(ArrayList<ArrayList<Double>> av, ArrayList<ArrayList<Double>> at, ArrayList<ArrayList<Location>> l) {
+        iri = new ArrayList<>();
+        color = new ArrayList<>();
+        polylines = new ArrayList<>();
+        // Initialize tracking polyline
+        for (int i=0; i<l.size(); i++) {
+            iri.add(Utils.approxIRI(av.get(i), at.get(i), l.get(i)));
+            color.add(Utils.getIRIColor(iri.get(i)));
+
+            Polyline polyline = new Polyline(map);
+            for (int j=0; j<l.get(i).size(); j++) {
+                polyline.addPoint(new GeoPoint(l.get(i).get(j).getLatitude(), l.get(i).get(j).getLongitude()));
+            }
+            polyline.getOutlinePaint().setColor(Color.parseColor(color.get(i)));
+            polyline.setTitle("IRI: " + String.format("%.4f", iri.get(i)));
+            polyline.setSnippet("TODO good/bad");
+            map.getOverlays().add(polyline);
+            polylines.add(polyline);
         }
     }
 
-    private double approxIRI(int segment_idx) {
+    @Override
+    public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+        Log.d("myDebug", "Spin to segment: " + i);
+        Log.d("myDebug", "size " + accelTimes.get(i).size());
+        graph.setDatapoints(accelTimes.get(i), accelVertical.get(i));
+        map.zoomToBoundingBox(polylines.get(i).getBounds().increaseByScale(3.0f), true);
+        map.setTranslationY(250);
+        int infoLoc_idx = polylines.get(i).getActualPoints().size()/2;
+        polylines.get(i).setInfoWindowLocation(polylines.get(i).getActualPoints().get(infoLoc_idx));
+        polylines.get(i).showInfoWindow();
+    }
 
-        if(accelVertical.get(segment_idx).size() < 2 || locations.get(segment_idx).size() < 2){
-            Log.i("myDebug", "iri calculation failed");
-            return 0;
-        }
+    @Override
+    public void onNothingSelected(AdapterView<?> adapterView) {
 
-        double iri = 0;
-        for (int i=0; i < accelVertical.get(segment_idx).size() -2; i++) {
-            double accelTime1 = accelTimes.get(segment_idx).get(i);
-            double accelTime2 = accelTimes.get(segment_idx).get(i +1);
-            iri += 0.5 * Math.abs(accelVertical.get(segment_idx).get(i)) * Math.pow(Math.abs(accelTime2 - accelTime1), 2);
-        }
-
-        double distance = 0;
-        for (int i=0; i < locations.get(segment_idx).size() - 2; i++) {
-            Location loc1 = locations.get(segment_idx).get(i);
-            Location loc2 = locations.get(segment_idx).get(i + 1);
-            distance += loc1.distanceTo(loc2);
-        }
-
-        if (distance == 0) {
-            return 0;
-        }
-        return iri/distance;
     }
 }

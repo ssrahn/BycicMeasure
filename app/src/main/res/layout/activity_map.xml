@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:background="#FAFAFA">
 
@@ -10,25 +11,56 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <Button
-        android:id="@+id/start_finish"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/buttonbar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
+        android:weightSum="3"
         android:layout_alignParentBottom="true"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="20dp"
-        android:background="#4CBB17"
-        android:text="Start" />
+        android:gravity="center">
 
-    <Button
+        <ToggleButton
+            android:id="@+id/automode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/toggle_rounded_corners"
+            android:checked="true"
+            android:textOff="AUTO OFF"
+            android:textOn="AUTO ON"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/start_stop"
+            android:layout_weight="1"
+            android:src="@drawable/ic_play"
+            app:fabCustomSize="80dp"
+            app:backgroundTint="#D6D7D7"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"/>
+
+        <Button
+            android:id="@+id/end"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@drawable/btn_rounded_corners"
+            android:text="End" />
+    </LinearLayout>
+
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/recenter"
+        android:src="@drawable/ic_recenter"
+
+        android:layout_above="@+id/buttonbar"
+        android:layout_alignParentEnd="true"
+
+        app:fabSize="normal"
+        app:backgroundTint="#D6D7D7"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/start_finish"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="20dp"
-        android:layout_marginBottom="0dp"
-        android:text="Recenter" />
+        android:layout_marginRight="24dp"/>
 
 </RelativeLayout>
