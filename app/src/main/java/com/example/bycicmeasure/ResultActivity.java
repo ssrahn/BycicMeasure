@@ -41,15 +41,12 @@ import java.util.Collections;
 
 public class ResultActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
-    private ArrayList<ArrayList<Location>> locations;
     private ArrayList<ArrayList<Double>> accelVertical;
     private ArrayList<ArrayList<Double>> accelTimes;
     // map object
     private MapView map;
     private Graph graph;
 
-    private ArrayList<Double> iri;
-    private ArrayList<String> color;
     private ArrayList<Polyline> polylines;
 
     @Override
@@ -65,25 +62,26 @@ public class ResultActivity extends AppCompatActivity implements AdapterView.OnI
 
         accelVertical = new ArrayList<>();
         accelTimes = new ArrayList<>();
-        locations = new ArrayList<>();
+        ArrayList<ArrayList<Location>> locations = new ArrayList<>();
 
         Utils.readJSON(filename, locations, accelVertical, accelTimes);
 
-        graph = new Graph(findViewById(R.id.graph));
-        graph.setDatapoints(accelTimes.get(0), accelVertical.get(0));
+        graph = new Graph(findViewById(R.id.graphResult));
+        graph.resetDatapoints(accelTimes.get(0), accelVertical.get(0));
 
         //get the spinner from the xml.
         Spinner spinner = findViewById(R.id.spinner);
         //create a list of items for the spinner.
         String[] items = new String[locations.size()-1];
-        for (int i=0; i<locations.size()-1; i++) {
+        for (int i = 0; i< locations.size()-1; i++) {
             items[i] = "Segment " + i;
         }
 
         // Initialize map controlling
         map = findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
-        map.getZoomController().getDisplay().setPositions(false, CustomZoomButtonsDisplay.HorizontalPosition.LEFT, CustomZoomButtonsDisplay.VerticalPosition.CENTER);
+        map.setMultiTouchControls(true);
+        map.getZoomController().getDisplay().setPositions(false, CustomZoomButtonsDisplay.HorizontalPosition.RIGHT, CustomZoomButtonsDisplay.VerticalPosition.CENTER);
         IMapController mapController = map.getController();
         mapController.setZoom(18.5);
 
@@ -98,8 +96,8 @@ public class ResultActivity extends AppCompatActivity implements AdapterView.OnI
     }
 
     private void evaluate(ArrayList<ArrayList<Double>> av, ArrayList<ArrayList<Double>> at, ArrayList<ArrayList<Location>> l) {
-        iri = new ArrayList<>();
-        color = new ArrayList<>();
+        ArrayList<Double> iri = new ArrayList<>();
+        ArrayList<String> color = new ArrayList<>();
         polylines = new ArrayList<>();
         // Initialize tracking polyline
         for (int i=0; i<l.size(); i++) {
@@ -122,7 +120,7 @@ public class ResultActivity extends AppCompatActivity implements AdapterView.OnI
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
         Log.d("myDebug", "Spin to segment: " + i);
         Log.d("myDebug", "size " + accelTimes.get(i).size());
-        graph.setDatapoints(accelTimes.get(i), accelVertical.get(i));
+        graph.resetDatapoints(accelTimes.get(i), accelVertical.get(i));
         map.zoomToBoundingBox(polylines.get(i).getBounds().increaseByScale(3.0f), true);
         map.setTranslationY(250);
         int infoLoc_idx = polylines.get(i).getActualPoints().size()/2;

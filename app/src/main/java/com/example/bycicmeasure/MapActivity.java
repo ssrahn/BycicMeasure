@@ -14,7 +14,9 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.ToggleButton;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -65,6 +67,7 @@ public class MapActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // load layout
         setContentView(R.layout.activity_map);
@@ -74,7 +77,7 @@ public class MapActivity extends AppCompatActivity {
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
 
         // Construct external sensor handler
-        sensorHandler = new SensorHandler(this);
+        sensorHandler = new SensorHandler(this, new Graph(findViewById(R.id.graphMap)));
 
         // use Nominatim service for reverse geocoding
         geocoder = new GeocoderNominatim("OSMBonusPackTutoUserAgent");
@@ -86,7 +89,8 @@ public class MapActivity extends AppCompatActivity {
         // Initialize map controlling
         map = findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
-        map.getZoomController().getDisplay().setPositions(false, CustomZoomButtonsDisplay.HorizontalPosition.LEFT, CustomZoomButtonsDisplay.VerticalPosition.CENTER);
+        map.setMultiTouchControls(true);
+        map.getZoomController().getDisplay().setPositions(false, CustomZoomButtonsDisplay.HorizontalPosition.RIGHT, CustomZoomButtonsDisplay.VerticalPosition.CENTER);
         IMapController mapController = map.getController();
         mapController.setZoom(18.5);
 
@@ -100,24 +104,29 @@ public class MapActivity extends AppCompatActivity {
         Drawable startDrawable = ResourcesCompat.getDrawable(res, R.drawable.ic_play, null);
         Drawable stopDrawable = ResourcesCompat.getDrawable(res, R.drawable.ic_stop, null);
 
+        TextView speedText = findViewById(R.id.speed);
+
         // This object handles location tracking and following on the map
         MyLocationNewOverlay myLocationoverlay = new MyLocationNewOverlay(map) {
             @Override
             public void onLocationChanged(Location location, IMyLocationProvider source) {
                 super.onLocationChanged(location, source);
 
-                if (recording && location != null) {
+                if (location != null) {
                     double current_speed = location.getSpeed();
-                    Log.i("myDebug", String.format("Speed: %f", current_speed));
+                    speedText.setText((int)current_speed + " km/h");
+                    if (recording) {
+                        Log.i("myDebug", String.format("Speed: %f", current_speed));
 
-                    if (current_speed > thresholdSpeed && sensorHandler.isCalibrated()) {
-                        // 1. save location in list
-                        locations.add(location);
-                        // 2. add location to the polyline to make it visible
-                        tracks.addPoint(new GeoPoint(location.getLatitude(), location.getLongitude()));
-                        if (autoMode) {
-                            // 4. Optional automatic segmentation
-                            automaticSegmentation(location);
+                        if (current_speed > thresholdSpeed && sensorHandler.isCalibrated()) {
+                            // 1. save location in list
+                            locations.add(location);
+                            // 2. add location to the polyline to make it visible
+                            tracks.addPoint(new GeoPoint(location.getLatitude(), location.getLongitude()));
+                            if (autoMode) {
+                                // 4. Optional automatic segmentation
+                                automaticSegmentation(location);
+                            }
                         }
                     }
                 }
@@ -280,6 +289,7 @@ public class MapActivity extends AppCompatActivity {
                     if (street_name != null && streetChangeDistance >= thresholdStreetChangeDistance) {
                         if (curr_streetname == null) {
                             curr_streetname = street_name;
+                            Log.d("myDebug", "new street: " + curr_streetname);
                             tracks.setSubDescription(curr_streetname);
                         }
                         if (!curr_streetname.equals(street_name)) {

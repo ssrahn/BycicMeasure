@@ -9,14 +9,20 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
     <com.jjoe64.graphview.GraphView
+        android:id="@+id/graphResult"
         android:layout_width="match_parent"
-        android:layout_height="200dip"
-        android:id="@+id/graph"
-        android:background="#FAFAFA"/>
-    <Spinner
-        android:id="@+id/spinner"
+        android:layout_height="150dp"
+        android:background="#FAFAFA" />
+
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/graph"/>
-
+        android:layout_below="@+id/graphResult"
+        android:background="@drawable/spinner_rounded_corners">
+        <Spinner
+            android:id="@+id/spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+    </RelativeLayout>
 </RelativeLayout>

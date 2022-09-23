@@ -11,6 +11,34 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <com.jjoe64.graphview.GraphView
+        android:id="@+id/graphMap"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:background="#FAFAFA" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/recenter"
+        android:src="@drawable/ic_recenter"
+
+        android:layout_above="@+id/buttonbar"
+        android:layout_alignParentEnd="true"
+
+        app:fabSize="normal"
+        app:backgroundTint="#D6D7D7"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="24dp"/>
+
+    <TextView
+        android:id="@+id/speed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonbar"
+        android:layout_marginStart="32dp"
+        android:layout_marginBottom="12dp"
+        android:textSize="24sp"
+        android:text="0 km/h" />
     <LinearLayout
         android:id="@+id/buttonbar"
         android:layout_width="match_parent"
@@ -47,20 +75,4 @@
             android:background="@drawable/btn_rounded_corners"
             android:text="End" />
     </LinearLayout>
-
-
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/recenter"
-        android:src="@drawable/ic_recenter"
-
-        android:layout_above="@+id/buttonbar"
-        android:layout_alignParentEnd="true"
-
-        app:fabSize="normal"
-        app:backgroundTint="#D6D7D7"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginRight="24dp"/>
-
 </RelativeLayout>

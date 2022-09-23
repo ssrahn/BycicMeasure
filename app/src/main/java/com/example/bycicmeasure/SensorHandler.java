@@ -9,6 +9,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
+import com.jjoe64.graphview.GraphView;
+
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
@@ -49,19 +51,22 @@ public class SensorHandler implements SensorEventListener {
     private double calibratetime = 2;
     private double offset = 0;
 
+    private Graph graph;
+
     /**
      * Construct a new SensorHandler with the given @context.
      * @context is needed to activate the sensors.
      *
      * @param context
      */
-    public SensorHandler(Context context) {
+    public SensorHandler(Context context, Graph graph) {
         this.context = context;
         accel_arr = new Double[3];
         gravity_arr = new Double[3];
         accelVertical = new ArrayList<>();
         accelVerticalCalibrate = new ArrayList<>();
         accelTimes = new ArrayList<>();
+        this.graph = graph;
     }
 
     /**
@@ -122,10 +127,11 @@ public class SensorHandler implements SensorEventListener {
         if (readLinearAccel && readGravity) {
             double vAccel = (accel_arr[0] * gravity_arr[0] / 9.8) + (accel_arr[1] * gravity_arr[1] / 9.8) + (accel_arr[2] * gravity_arr[2] / 9.8);
             double time = (double) (System.currentTimeMillis() - startTime) / 1000.0;
-            Log.d("myDebugAcc", "Accel " + vAccel + " - " + time);
+            //Log.d("myDebugAcc", "Accel " + vAccel + " - " + time);
             if (calibrated) {
                 accelVertical.add(vAccel-offset);
                 accelTimes.add(time);
+                graph.appendDatapoint(vAccel-offset);
             }
             else if (calibrating) {
                 double time_c = (double) (System.currentTimeMillis() - startCalibrateTime) / 1000.0;
