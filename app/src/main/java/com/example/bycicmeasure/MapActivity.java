@@ -41,14 +41,14 @@ import java.util.List;
 
 public class MapActivity extends AppCompatActivity {
 
-    // Static threshold values TODO test them, what are good values?
-    private final double thresholdSpeed = 0.5; // 0.5 m/s
+    // map object
+    private MapView map;
+    // Static threshold values
+    private final double thresholdSpeed = 0.6; // 0.6 m/s
     private final double thresholdStreetChangeDistance = 20; // 20m
     // Status variables
     private boolean recording = false;
     private boolean autoMode = true;
-    // map object
-    private MapView map;
     // geocoder to request street names of geo points
     private GeocoderNominatim geocoder;
     // Values which hold information of street names of geo points and street changes
@@ -57,10 +57,11 @@ public class MapActivity extends AppCompatActivity {
     private boolean streetChanged = false;
     // External class that handles all sensors
     private SensorHandler sensorHandler;
-    // Stores that hold all recorded data for each segment
+    // Lists that hold all recorded data for each segment
     private ArrayList<ArrayList<Double>> accelVertical_list;
     private ArrayList<ArrayList<Double>> accelTimes_list;
     private ArrayList<ArrayList<Location>> locations_list;
+    // Lists that hold current data
     private ArrayList<Location> locations;
     private Polyline tracks;
 
@@ -89,21 +90,24 @@ public class MapActivity extends AppCompatActivity {
         // Initialize map controlling
         map = findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
+        // Activate touch controls and put zoom buttons to the right of the screen
         map.setMultiTouchControls(true);
         map.getZoomController().getDisplay().setPositions(false, CustomZoomButtonsDisplay.HorizontalPosition.RIGHT, CustomZoomButtonsDisplay.VerticalPosition.CENTER);
         IMapController mapController = map.getController();
         mapController.setZoom(18.5);
 
-        // Initialize all storing variables
+        // Initialize all lists
         accelVertical_list = new ArrayList<>();
         accelTimes_list = new ArrayList<>();
         locations_list = new ArrayList<>();
         locations = new ArrayList<>();
 
+        // Initialize drawales for play/stop button
         Resources res = getResources();
         Drawable startDrawable = ResourcesCompat.getDrawable(res, R.drawable.ic_play, null);
         Drawable stopDrawable = ResourcesCompat.getDrawable(res, R.drawable.ic_stop, null);
 
+        // Initialize TextView for current speed
         TextView speedText = findViewById(R.id.speed);
 
         // This object handles location tracking and following on the map
@@ -113,11 +117,12 @@ public class MapActivity extends AppCompatActivity {
                 super.onLocationChanged(location, source);
 
                 if (location != null) {
+                    // Get current speed from location and update the TextView
                     double current_speed = location.getSpeed();
-                    speedText.setText((int)current_speed + " km/h");
+                    speedText.setText((int)(current_speed*3.6) + " km/h");
                     if (recording) {
-                        Log.i("myDebug", String.format("Speed: %f", current_speed));
-
+                        // Only update location when sensors are active and faster than threshold
+                        // This prevents small changes in osm while standing still
                         if (current_speed > thresholdSpeed && sensorHandler.isCalibrated()) {
                             // 1. save location in list
                             locations.add(location);
@@ -139,35 +144,34 @@ public class MapActivity extends AppCompatActivity {
         FloatingActionButton startPauseButton = findViewById(R.id.start_stop);
         startPauseButton.setOnClickListener(view -> {
             if (!recording) {
-                Log.i("myDebug", "Start Recording");
                 // start recording/Start new segment
                 startPauseButton.setImageDrawable(stopDrawable);
                 // Initialize all variables for a new record and Start the sensors
                 initSegment();
+                // Start and calibrate the sensors
                 sensorHandler.startSensors();
                 sensorHandler.calibrate();
                 recording = true;
             } else {
-                Log.i("myDebug", "Stop recording");
                 // Stop recording/Stop segment
                 startPauseButton.setImageDrawable(startDrawable);
-                // Evaluate the recorded segment and pause sensors
-                if (sensorHandler.getAccelTimes().size() > 1) {
-                    evaluateSegment();
-                }
+                // Evaluate Segment and pause everything
+                evaluateSegment();
                 sensorHandler.pauseSensors();
                 recording = false;
             }
         });
 
-        // Button that will end the current session and bring us to the result screen
         Button endButton = findViewById(R.id.end);
         endButton.setOnClickListener(view -> {
+            // Finish the current session
             startPauseButton.setImageDrawable(startDrawable);
             // Pause sensors, evaluate last recorded segment and write it to a json file
             sensorHandler.pauseSensors();
             recording = false;
             if (sensorHandler.getAccelTimes().size() > 1) {
+                // This check is needed because its possible to end a session without creating a segment
+                // Will otherwise crash the app
                 evaluateSegment();
             }
             if (accelTimes_list.size() > 0) {
@@ -177,11 +181,11 @@ public class MapActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // With this toogle we can switch the auto segmentation off and on
+        // Toggle auto segmentation mode
         ToggleButton toggle = findViewById(R.id.automode);
         toggle.setOnCheckedChangeListener((buttonView, isChecked) -> autoMode = isChecked);
 
-        // This button handles recentering the map to the current location
+        // This button handles reentering the map to the current location
         FloatingActionButton recenterButton = findViewById(R.id.recenter);
         recenterButton.setOnClickListener(view -> {
             myLocationoverlay.enableFollowLocation();
@@ -190,11 +194,7 @@ public class MapActivity extends AppCompatActivity {
     }
 
     /**
-     * Initialize global variables to start a new recording.
-     *
-     * In @automode, to prevent the creation of new segments (e.g. at intersections),
-     * a certain distance must be covered before a new segment is created.
-     * The two parameters serve to not lose this distance!
+     * Initialize global variables to start a new segment.
      */
     private void initSegment() {
         // Initialize variables
@@ -214,7 +214,7 @@ public class MapActivity extends AppCompatActivity {
      * 1. Check if it is valid (2 or more data points)
      * 2. Approximate the IRI value
      * 3. Get the right coloring for the calculated iri value
-     * 4. Save data of Segment to the big Stores
+     * 4. Save data of Segment to the corresponding lists
      */
     private void evaluateSegment() {
         ArrayList<Double> av = sensorHandler.getAccelVertical();
@@ -225,42 +225,42 @@ public class MapActivity extends AppCompatActivity {
             // Here we take care of the Polyline
             // Everything else will get automatically removed with the next @initSegment call
             map.getOverlays().remove(map.getOverlays().size() - 1);
-            Log.i("myDebug", "Evaluation failed");
         }
         else {
             // Segment is valid
             double iri = Utils.approxIRI(av, at, locations);
-            Log.i("myDebug", String.format("iri: %f", iri));
 
             Paint paint = tracks.getOutlinePaint();
             paint.setColor(Color.parseColor(Utils.getIRIColor(iri)));
             tracks.setSnippet(Double.toString(round(iri, 4)));
 
-            Log.i("myDebug", String.format("Color: %d", paint.getColor()));
-
             accelVertical_list.add(new ArrayList<>(av));
             accelTimes_list.add(new ArrayList<>(at));
             locations_list.add(new ArrayList<>(locations));
-            Log.i("myDebug", "Evaluation successfully");
         }
     }
 
     /**
      * If a street change occurs and the threshold distance is travelled on the new street,
-     * a new segment will be automatically generated for the new street
+     * a new segment will be automatically created
      *
-     * @param location
+     * @param location Current location is needed to get the corresponding street name
      */
     private void automaticSegmentation(Location location) {
         if (!recording) {
             return;
         }
 
+        // Get current street name with reverse geocoding.
+        // Will start a new Thread, so its possible the updated street name will occur on the next call
+        // Which is no problem!
         getStreet(location);
         if (streetChangeDistance < thresholdStreetChangeDistance && locations.size() > 2) {
+            // update traveled distance if its below the threshold
             streetChangeDistance += location.distanceTo(locations.get(locations.size()-2));
         }
         else {
+            // Threshold distance reached, if a street change occurs a new segment will be created
             if (streetChanged) {
                 streetChanged = false;
                 streetChangeDistance = 0;
@@ -284,15 +284,15 @@ public class MapActivity extends AppCompatActivity {
                 List<Address> addressList = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
                 if (addressList.size() > 0) {
                     String street_name = addressList.get(0).getThoroughfare();
-                    if (street_name != null) {
-                    }
                     if (street_name != null && streetChangeDistance >= thresholdStreetChangeDistance) {
+                        // Only update street name if its valid and the threshold distance is reached
                         if (curr_streetname == null) {
+                            // Will initialize a new street and bind it to the current track
                             curr_streetname = street_name;
-                            Log.d("myDebug", "new street: " + curr_streetname);
                             tracks.setSubDescription(curr_streetname);
                         }
                         if (!curr_streetname.equals(street_name)) {
+                            // Start the street change routine
                             streetChanged = true;
                             curr_streetname = street_name;
                         }

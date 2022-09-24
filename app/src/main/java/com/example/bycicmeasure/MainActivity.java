@@ -72,13 +72,9 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Button helpButton = findViewById(R.id.help);
-        helpButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view)
-            {
-                // Do something
-                // TODO show help
-            }
+        helpButton.setOnClickListener(view -> {
+            // Do something
+            // TODO show help
         });
     }
 

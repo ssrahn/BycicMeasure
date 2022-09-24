@@ -9,12 +9,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
-import com.jjoe64.graphview.GraphView;
-
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
-
 import java.util.ArrayList;
 
 public class SensorHandler implements SensorEventListener {
@@ -28,30 +22,30 @@ public class SensorHandler implements SensorEventListener {
     // linear accelerometer object without gravity
     private Sensor linearAccelerometer = null;
 
+    // Arrays used to store latest measured data
     private final Double[] accel_arr;
     private final Double[] gravity_arr;
 
-    // arrays that hold measurements
+    // Lists that hold all measurements
     private final ArrayList<Double> accelVertical;
     private final ArrayList<Double> accelTimes;
     private final ArrayList<Double> accelVerticalCalibrate;
 
-    boolean readLinearAccel = false;
-    boolean readGravity = false;
-    boolean running = false;
-
-    // thresholds to prevent unnecessary storing of same data
-    private final double thresholdAccel = 0.01;
-    // start time for diff calculations
-    private long startTime;
-
+    // Status variables
+    private boolean readLinearAccel = false;
+    private boolean readGravity = false;
+    private boolean running = false;
     private boolean calibrated = false;
     private boolean calibrating = false;
-    private long startCalibrateTime;
-    private double calibratetime = 2;
-    private double offset = 0;
 
-    private Graph graph;
+    // Start time to calculate timestamps for measurements
+    private long startTime;
+    // Calibration variables
+    private double calibratetime = 1; // 1s
+    private long startCalibrateTime;
+    private double offset = 0;
+    // Dynamic gaph that plots latest measurements
+    private final Graph graph;
 
     /**
      * Construct a new SensorHandler with the given @context.
@@ -70,7 +64,7 @@ public class SensorHandler implements SensorEventListener {
     }
 
     /**
-     * Initialize or reset sensor data.
+     * Reinitialize sensor data.
      * Will be called for every new segment.
      */
     void init() {
@@ -82,11 +76,7 @@ public class SensorHandler implements SensorEventListener {
      * Start Linear acceleration and gravity sensors
      */
     void startSensors() {
-        // Setup Sensors
-        // -------------
-        // - we use accelerometer with gravity sensor to calculate the rotation
-        // matrix between smartphone and earth coordination system
-        // - the linear accelerometer is used for IRI computation
+        // To get the direction towards gravity, we use the linear accelerometer together with the gravity sensor
         if (!running) {
             sensorManager = (SensorManager) context.getSystemService(SENSOR_SERVICE);
             gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
@@ -106,6 +96,11 @@ public class SensorHandler implements SensorEventListener {
         }
     }
 
+    /**
+     * Function that handles all sensor changes
+     *
+     * @param event
+     */
     public void onSensorChanged(SensorEvent event) {
 
         Sensor sensor = event.sensor;
@@ -125,22 +120,25 @@ public class SensorHandler implements SensorEventListener {
         }
 
         if (readLinearAccel && readGravity) {
+            // Calculate vertical acceleration if linear acc and gravity was measured
             double vAccel = (accel_arr[0] * gravity_arr[0] / 9.8) + (accel_arr[1] * gravity_arr[1] / 9.8) + (accel_arr[2] * gravity_arr[2] / 9.8);
             double time = (double) (System.currentTimeMillis() - startTime) / 1000.0;
-            //Log.d("myDebugAcc", "Accel " + vAccel + " - " + time);
             if (calibrated) {
+                // Append the data, if the device is calibrated
                 accelVertical.add(vAccel-offset);
                 accelTimes.add(time);
                 graph.appendDatapoint(vAccel-offset);
             }
             else if (calibrating) {
+                // Do calibration
                 double time_c = (double) (System.currentTimeMillis() - startCalibrateTime) / 1000.0;
                 if (time_c < calibratetime) {
+                    // Read data while calibration is in progress
                     accelVerticalCalibrate.add(vAccel);
                 }
                 else {
+                    // On finish, calculate the offset
                     offset = Utils.avg(accelVerticalCalibrate);
-                    Log.i("myDebug", "Calibrated: " + offset);
                     calibrated = true;
                     calibrating = false;
                 }
@@ -148,13 +146,21 @@ public class SensorHandler implements SensorEventListener {
         }
     }
 
+    /**
+     * Calibrate the accelerometer
+     */
     void calibrate() {
-        Log.i("myDebug", "calibrating...");
+        // Each devices accelerometer comes with an offset.
+        // In calibration mode, we calculate that offset
         calibrated = false;
         calibrating = true;
         startCalibrateTime = System.currentTimeMillis();
     }
 
+    /**
+     * Check if the sensorHandler is calibrated
+     * @return
+     */
     boolean isCalibrated() {
         return calibrated;
     }

@@ -20,6 +20,13 @@ import java.util.Date;
 import java.util.Locale;
 
 public class Utils {
+    /**
+     * Calculate average value of a list.
+     * We need this to calculate the calibration.
+     *
+     * @param list List of number
+     * @return Average number of list
+     */
     static double avg(ArrayList<Double> list) {
         double sum = 0;
         for (int i=0; i<list.size(); i++) {
@@ -29,7 +36,7 @@ public class Utils {
     }
 
     /**
-     * Categorize the iri value and return the mathcing color
+     * Categorize the iri value and return the matching color
      *
      * @param iri
      * @return Matching color for @iri
@@ -144,6 +151,14 @@ public class Utils {
         Log.i("myDebug", file.getAbsolutePath());
     }
 
+    /**
+     * Write all measurements of a json file
+     *
+     * @param filename Filename of a record
+     * @param locations List where all locations a stored in
+     * @param accelVertical List where all vertical accelerations a stored in
+     * @param accelTimes List where all acceleration times a stored in
+     */
     static void readJSON(String filename, ArrayList<ArrayList<Location>> locations, ArrayList<ArrayList<Double>> accelVertical, ArrayList<ArrayList<Double>> accelTimes) {
         Log.i("myDebug", filename);
 
