@@ -140,9 +140,7 @@ public class MapActivity extends AppCompatActivity {
         myLocationoverlay.enableMyLocation();
         // Change Navigation icons (default is white and really bad visible)
         Drawable naviDraw = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_navigation, null);
-        Drawable personDraw = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_circle, null);
         myLocationoverlay.setDirectionIcon(Utils.drawableToBitmap(naviDraw));
-        myLocationoverlay.setPersonIcon(Utils.drawableToBitmap(personDraw));
         // Append overly to map
         map.getOverlays().add(myLocationoverlay);
 
