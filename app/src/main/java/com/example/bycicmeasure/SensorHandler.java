@@ -41,7 +41,7 @@ public class SensorHandler implements SensorEventListener {
     // Start time to calculate timestamps for measurements
     private long startTime;
     // Calibration variables
-    private double calibratetime = 1; // 1s
+    private double calibratetime = 2; // 2s
     private long startCalibrateTime;
     private double offset = 0;
     // Dynamic gaph that plots latest measurements
