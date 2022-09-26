@@ -13,7 +13,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
@@ -139,6 +138,12 @@ public class MapActivity extends AppCompatActivity {
         };
         myLocationoverlay.enableFollowLocation();
         myLocationoverlay.enableMyLocation();
+        // Change Navigation icons (default is white and really bad visible)
+        Drawable naviDraw = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_navigation, null);
+        Drawable personDraw = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_circle, null);
+        myLocationoverlay.setDirectionIcon(Utils.drawableToBitmap(naviDraw));
+        myLocationoverlay.setPersonIcon(Utils.drawableToBitmap(personDraw));
+        // Append overly to map
         map.getOverlays().add(myLocationoverlay);
 
         FloatingActionButton startPauseButton = findViewById(R.id.start_stop);
