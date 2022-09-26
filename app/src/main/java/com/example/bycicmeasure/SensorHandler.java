@@ -154,6 +154,7 @@ public class SensorHandler implements SensorEventListener {
         // In calibration mode, we calculate that offset
         calibrated = false;
         calibrating = true;
+        accelVerticalCalibrate.clear();
         startCalibrateTime = System.currentTimeMillis();
     }
 
