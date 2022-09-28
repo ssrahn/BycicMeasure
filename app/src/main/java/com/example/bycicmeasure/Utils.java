@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Environment;
 import android.util.Log;
+import android.util.Pair;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -45,19 +46,23 @@ public class Utils {
      * @param iri
      * @return Matching color for @iri
      */
-    static String getIRIColor(double iri) {
+    static Pair<String, String> evaluateIRI(double iri) {
         //TODO: set color
         String color = "#0000FF";
-        if (iri <= 0.1) { // good
+        String state = "Not classified";
+        if (iri <= 0.003) { // excellent
             color = "#00FF00";
+            state = "excellent";
         }
-        if (iri > 0.1 && iri <= 1) { // mhh
+        if (iri > 0.003 && iri <= 0.02) { // okay
             color = "#FFFF00";
+            state = "okay";
         }
-        if (iri > 1) { // nono
+        if (iri > 0.02) { // poor
             color = "#FF0000";
+            state = "poor";
         }
-        return color;
+        return new Pair<>(state, color);
     }
 
     /**

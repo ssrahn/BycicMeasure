@@ -6,6 +6,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -81,20 +82,20 @@ public class ResultActivity extends AppCompatActivity implements AdapterView.OnI
 
     private void evaluate(ArrayList<ArrayList<Double>> av, ArrayList<ArrayList<Double>> at, ArrayList<ArrayList<Location>> l) {
         ArrayList<Double> iri = new ArrayList<>();
-        ArrayList<String> color = new ArrayList<>();
+        ArrayList<Pair<String, String>> evaluatedIRI = new ArrayList<>();
         polylines = new ArrayList<>();
         // Initialize tracking polyline
         for (int i=0; i<l.size(); i++) {
             iri.add(Utils.approxIRI(av.get(i), at.get(i), l.get(i)));
-            color.add(Utils.getIRIColor(iri.get(i)));
+            evaluatedIRI.add(Utils.evaluateIRI(iri.get(i)));
 
             Polyline polyline = new Polyline(map);
             for (int j=0; j<l.get(i).size(); j++) {
                 polyline.addPoint(new GeoPoint(l.get(i).get(j).getLatitude(), l.get(i).get(j).getLongitude()));
             }
-            polyline.getOutlinePaint().setColor(Color.parseColor(color.get(i)));
+            polyline.getOutlinePaint().setColor(Color.parseColor(evaluatedIRI.get(i).second));
             polyline.setTitle("IRI: " + String.format("%.4f", iri.get(i)));
-            polyline.setSnippet("TODO good/bad");
+            polyline.setSnippet(evaluatedIRI.get(i).first);
             map.getOverlays().add(polyline);
             polylines.add(polyline);
         }

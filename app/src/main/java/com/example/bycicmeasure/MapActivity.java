@@ -234,7 +234,7 @@ public class MapActivity extends AppCompatActivity {
             double iri = Utils.approxIRI(av, at, locations);
 
             Paint paint = tracks.getOutlinePaint();
-            paint.setColor(Color.parseColor(Utils.getIRIColor(iri)));
+            paint.setColor(Color.parseColor(Utils.evaluateIRI(iri).second));
             tracks.setSnippet(Double.toString(round(iri, 4)));
 
             accelVertical_list.add(new ArrayList<>(av));
