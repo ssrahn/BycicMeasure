@@ -7,14 +7,14 @@
     android:background="#FAFAFA">
 
     <ImageView
-        android:layout_weight="1.5"
+        android:layout_weight="1.4"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:layout_gravity="center_horizontal"
         android:src="@drawable/bicycle" />
 
     <LinearLayout
-        android:layout_weight="0.4"
+        android:layout_weight="0.5"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:orientation="vertical"
