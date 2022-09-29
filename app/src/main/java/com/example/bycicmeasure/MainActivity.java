@@ -98,8 +98,8 @@ public class MainActivity extends AppCompatActivity {
         // Button to show user guide
         Button helpButton = findViewById(R.id.help);
         helpButton.setOnClickListener(view -> {
-            // Do something
-            // TODO show help
+            Intent intent = new Intent(view.getContext(), HelpActivity.class);
+            startActivity(intent);
         });
     }
 }

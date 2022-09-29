@@ -29,6 +29,13 @@
             </intent-filter>
         </activity>
         <activity
+            android:name=".HelpActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.HELP" />
+            </intent-filter>
+        </activity>
+        <activity
             android:name=".RecordsActivity"
             android:exported="true">
             <intent-filter>
