@@ -47,18 +47,17 @@ public class Utils {
      * @return Matching color for @iri
      */
     static Pair<String, String> evaluateIRI(double iri) {
-        //TODO: set color
         String color = "#0000FF";
         String state = "Not classified";
-        if (iri <= 0.003) { // excellent
+        if (iri <= 0.005) { // excellent
             color = "#00FF00";
             state = "excellent";
         }
-        if (iri > 0.003 && iri <= 0.02) { // okay
+        if (iri > 0.005 && iri <= 0.015) { // okay
             color = "#FFFF00";
             state = "okay";
         }
-        if (iri > 0.02) { // poor
+        if (iri > 0.015) { // poor
             color = "#FF0000";
             state = "poor";
         }
